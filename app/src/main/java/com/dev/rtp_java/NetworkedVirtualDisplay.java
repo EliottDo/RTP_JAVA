@@ -77,7 +77,7 @@ public class NetworkedVirtualDisplay {
     private MediaCodec mVideoEncoder;
     private HandlerThread mThread = new HandlerThread("NetworkThread");
     private Handler mHandler;
-    private ServerSocket mServerSocket;
+    private Socket mServerSocket;
     private OutputStream mOutputStream;
     private byte[] mBuffer = null;
     private int mLastFrameLength = 0;
@@ -307,6 +307,7 @@ public class NetworkedVirtualDisplay {
             super(looper);
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.M)
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
@@ -318,7 +319,7 @@ public class NetworkedVirtualDisplay {
 
                     mOutputStream = waitForReceiver(mServerSocket);
                     if (mOutputStream == null) {
-                        sendMessage(Message.obtain(this, MSG_START));
+                        sendMessageDelayed(Message.obtain(this, MSG_START), 1000);
                         break;
                     }
                     mCounter.clientsConnected++;
@@ -343,8 +344,29 @@ public class NetworkedVirtualDisplay {
     }
 
     private static void configureVideoEncoder(MediaCodec codec, int width, int height) {
-        MediaFormat format = MediaFormat.createVideoFormat(MEDIA_FORMAT_MIMETYPE, width, height);
 
+        /*try {
+            codec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC);
+            MediaFormat format = MediaFormat.createVideoFormat(MEDIA_FORMAT_MIMETYPE, width, height);
+
+            format.setInteger(MediaFormat.KEY_BIT_RATE, 220000);
+            format.setInteger(MediaFormat.KEY_FRAME_RATE, 20);
+            format.setInteger(MediaFormat.KEY_COLOR_FORMAT,
+                    MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
+            format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 0);
+            format.setInteger(MediaFormat.KEY_REPEAT_PREVIOUS_FRAME_AFTER, 1000000);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                format.setInteger(MediaFormat.KEY_LATENCY, 0);
+            }
+            format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 5);
+            format.setInteger(MediaFormat.KEY_PRIORITY, 0x00);
+            codec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
+
+        MediaFormat format = MediaFormat.createVideoFormat(MEDIA_FORMAT_MIMETYPE, width, height);
         format.setInteger(MediaFormat.KEY_COLOR_FORMAT,
                 MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
         format.setInteger(MediaFormat.KEY_BIT_RATE, BITRATE);
@@ -353,21 +375,19 @@ public class NetworkedVirtualDisplay {
         format.setInteger(MediaFormat.KEY_CHANNEL_COUNT, 1);
         format.setFloat(MediaFormat.KEY_I_FRAME_INTERVAL, 1); // 1 second between I-frames
         format.setInteger(MediaFormat.KEY_LEVEL, CodecProfileLevel.AVCLevel31);
-        format.setInteger(MediaFormat.KEY_PROFILE,
-                CodecProfileLevel.AVCProfileBaseline);
+        format.setInteger(MediaFormat.KEY_PROFILE, CodecProfileLevel.AVCProfileBaseline);
 
         codec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
     }
 
-    private OutputStream waitForReceiver(ServerSocket serverSocket) {
+    private OutputStream waitForReceiver(Socket serverSocket) {
         try {
             Log.i(TAG, "Listening for incoming connections on port: " + PORT);
-            Socket socket = serverSocket.accept();
 
-            Log.i(TAG, "Receiver connected: " + socket);
-            listenReceiverDisconnected(socket.getInputStream());
+            Log.i(TAG, "Receiver connected: " + serverSocket);
+            listenReceiverDisconnected(serverSocket.getInputStream());
 
-            return socket.getOutputStream();
+            return serverSocket.getOutputStream();
         } catch (IOException e) {
             Log.e(TAG, "Failed to accept connection");
             return null;
@@ -381,13 +401,13 @@ public class NetworkedVirtualDisplay {
             } catch (IOException e) {
                 Log.w(TAG, "Receiver has disconnected", e);
             }
-            restart();
+//            restart();
         }).start();
     }
 
-    private static ServerSocket openServerSocket() {
+    private static Socket openServerSocket() {
         try {
-            return new ServerSocket(PORT);
+            return new Socket("192.168.0.194",PORT);
         } catch (IOException e) {
             Log.e(TAG, "Failed to create server socket", e);
             throw new RuntimeException(e);

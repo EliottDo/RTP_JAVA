@@ -71,19 +71,13 @@ public class NavigationFragment extends Fragment {
             if (navDisplayId == displayId) {
                 try {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        getService().setClusterActivityLaunchOptions(
-                                CATEGORY_NAVIGATION,
-                                ActivityOptions.makeBasic()
-                                        .setLaunchDisplayId(displayId));
+                        getService().setClusterActivityLaunchOptions(CATEGORY_NAVIGATION, ActivityOptions.makeBasic().setLaunchDisplayId(displayId));
                     }
                     mRegisteredNavDisplayId = displayId;
 
-                    getService().setClusterActivityState(
-                            CATEGORY_NAVIGATION,
-                            ClusterActivityState.create(true, mUnobscuredBounds).toBundle());
+                    getService().setClusterActivityState(CATEGORY_NAVIGATION, ClusterActivityState.create(true, mUnobscuredBounds).toBundle());
                 } catch (CarNotConnectedException e) {
-                    throw new IllegalStateException(
-                            "Failed to report nav activity cluster launch options", e);
+
                 }
             }
         }

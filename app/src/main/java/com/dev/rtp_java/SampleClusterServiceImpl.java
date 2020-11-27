@@ -186,34 +186,32 @@ public class SampleClusterServiceImpl extends InstrumentClusterRenderingService 
         Log.i(TAG, "emulateKeyEvent, keyCode: " + keyCode);
         long downTime = SystemClock.uptimeMillis();
         long eventTime = SystemClock.uptimeMillis();
-        /*KeyEvent event = obtainKeyEvent(keyCode, downTime, eventTime, KeyEvent.ACTION_DOWN);
+        KeyEvent event = obtainKeyEvent(keyCode, downTime, eventTime, KeyEvent.ACTION_DOWN);
         onKeyEvent(event);
 
         eventTime = SystemClock.uptimeMillis();
         event = obtainKeyEvent(keyCode, downTime, eventTime, KeyEvent.ACTION_UP);
-        onKeyEvent(event);*/
+        onKeyEvent(event);
     }
 
-    /*private KeyEvent obtainKeyEvent(int keyCode, long downTime, long eventTime, int action) {
+    private KeyEvent obtainKeyEvent(int keyCode, long downTime, long eventTime, int action) {
         int scanCode = 0;
         if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
             scanCode = 108;
         } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
             scanCode = 106;
         }
-        return KeyEvent.obtain(
-                    downTime,
-                    eventTime,
-                    action,
-                    keyCode,
-                    0 *//* repeat *//*,
-                    0 *//* meta state *//*,
-                    0 *//* deviceId*//*,
-                    scanCode *//* scancode *//*,
-                    KeyEvent.FLAG_FROM_SYSTEM *//* flags *//*,
-                    InputDevice.SOURCE_KEYBOARD,
-                    null *//* characters *//*);
-    }*/
+        return new KeyEvent(downTime,
+                eventTime,
+                action,
+                keyCode,
+                0,
+                0,
+                0,
+                scanCode  ,
+                KeyEvent.FLAG_FROM_SYSTEM  ,
+                InputDevice.SOURCE_KEYBOARD);
+    }
 
     private void execShellCommand(String[] args) {
         Log.i(TAG, "execShellCommand, args: " + Arrays.toString(args));
@@ -238,7 +236,7 @@ public class SampleClusterServiceImpl extends InstrumentClusterRenderingService 
             case "createOverlayDisplay": {
                 if (args.length > 1) {
                     Global.putString(getContentResolver(),
-                            Global.OVERLAY_DISPLAY_DEVICES, args[1]);
+                            Settings.Global.OVERLAY_DISPLAY_DEVICES, args[1]);
                 } else {
                     Log.i(TAG, "Not enough arguments, expected 2");
                 }
